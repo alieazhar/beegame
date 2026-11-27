@@ -35,6 +35,8 @@ let keys = [keyW,keyS,keyA,keyD];
 
 // debug
 let DEBUG_lastKeyEvent;
+let debugCanvas;
+let debugCTX;
 
 function startTimer(){
     if (timeInterval == undefined){
@@ -77,6 +79,7 @@ function gameLoop(){
     
     player.move();
     drawAll();
+    enforceAllCollisons();
     
 
     // debug
@@ -158,19 +161,36 @@ class Collidable {
         this.width = width;
         this.posX = posX;
         this.posY = posY;
+        this.dX = 0;
+        this.dY = 0;
+        this.dirX = 1;
+        this.dirY = 1;
+        this.hasCollison = false;
     }
 
-    static checkCollision(obj1, obj2){
-        let results = [0,0];
-        if (obj1.posX == obj2.posX + obj2.length || obj2.posX == obj1.posX + obj1.length){
-            results[0] = 1;
-        } else {
-            results[0] = 0;
-        }
-        if (obj1.posY == obj2.posY + obj2.width || obj2.posY == obj1.posY + obj1.width){
-            results[1] = 1;
-        } else {
-            results[0] = 0;
+    static enforceCollision(obj1, obj2){
+        if (!this.hasCollison){
+            let results = [0,0];
+            // if the x coord of object 1 is less than the x of obj 2 
+
+            if (obj1.posX + obj1.length > obj2.posX || obj2.posX + obj2.length > obj2.posX){
+                results[0] = 1;
+            }
+
+
+            if (obj1.posY + obj1.width > obj2.posY || obj2.posY + obj2.width > obj2.posY){
+                results[1] = 1;
+            }
+
+            if (results[0] == 1){
+                obj1.posX = obj2.posX - obj1.length;
+                obj1.dX = 0;
+            }
+
+            if (results[1] == 1){
+                obj1.posY = obj2.posY - obj1.width;
+                obj1.dY = 0;
+            }
         }
     }
 }
@@ -181,6 +201,10 @@ class ObstacleRect extends Collidable {
         this.innerColour = innerColour;
         this.outline = outlineColour;
         this.strokeSize = strokeSize;
+        this.dX = 0;
+        this.dY = 0;
+        this.dirX = 1;
+        this.dirY = 1;
         
     }
 
@@ -195,6 +219,18 @@ class ObstacleRect extends Collidable {
         ctx.restore();
     }
 
+}
+
+function enforceAllCollisons(){
+    for (let i = 0; i < scene.length; i++){
+        let curr = scene[i];
+
+        for (let j = 0; j < scene.length; j++){
+            if (i !== j){
+                Collidable.enforceCollision(curr,scene[j]);
+            }
+        }
+    }
 }
 
 
@@ -361,25 +397,37 @@ function Key(keyName){
 
 
 
+
+
+function debugCanvasSetup(){
+    debugCanvas = document.getElementById("surface");
+    debugCTX = document.getElementById("surface").getContext("2d"); 
+    
+    debugCTX.font = "12px Arial"
+}
+
 function debug(keyEvent){
-    let output = "";
+    // let output = "";
 
-    if (keyEvent != undefined){
-        output += "===" + frame + " " + keyEvent.key 
-        + " " + keyEvent.type + "===\n";
-    } else {
-        output += "===" + frame + " No input===\n";
-    }
+    // if (keyEvent != undefined){
+    //     output += "===" + frame + " " + keyEvent.key 
+    //     + " " + keyEvent.type + "===\n";
+    // } else {
+    //     output += "===" + frame + " No input===\n";
+    // }
 
-    for (let i = 0; i < keys.length; i++){
-        output += keys[i].name + ": " + keys[i].state + "\n";
-    }
-    output += "x: " + player.posX.toFixed(1) + "\n";
-    output += "Y: " + player.posY.toFixed(1) +"\n";
-    output += "dX: " + player.dX.toFixed(3) + "\n";
-    output += "dY: " + player.dY.toFixed(3) + "\n";
+    // for (let i = 0; i < keys.length; i++){
+    //     output += keys[i].name + ": " + keys[i].state + "\n";
+    // }
+    // output += "x: " + player.posX.toFixed(1) + "\n";
+    // output += "Y: " + player.posY.toFixed(1) +"\n";
+    // output += "dX: " + player.dX.toFixed(3) + "\n";
+    // output += "dY: " + player.dY.toFixed(3) + "\n";
     
-    output += "===" + frame + "===";
+    // output += "===" + frame + "===";
     
-    console.log(output);
+    // console.log(output);
+
+    debugCTX.fillText("hi",20,20);
+
 }

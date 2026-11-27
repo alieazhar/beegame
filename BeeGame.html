@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <script src="BeeGame.js"></script>
 </head>
-<body onload="setup()" onkeydown="input.handle(event)" onkeyup="input.handle(event)">
+<body onload="setup()" onload="debugCanvasSetup()" onkeydown="input.handle(event)" onkeyup="input.handle(event)">
     <div>
-        <h1>Bees Everywhere! Catch 10 to win!</h1>
-        <p>Grab the net (lower right corner)</p>
+        <!-- <h1>Bees Everywhere! Catch 10 to win!</h1>
+        <p>Grab the net (lower right corner)</p> -->
         <canvas 
             id="surface"
             style="border-style: solid; border-width: 5px;" 
@@ -15,7 +15,15 @@
             width="900">
         </canvas>
     </div>
+    <div>
+        <canvas
+            id="debug"
+            style="border-style: solid; border-width: 5px;" 
+            height="100";
+            width="900">
+        </canvas>
+    </div>
     
-    <button onclick="">Reset</button>
+    <!-- <button onclick="">Reset</button> -->
 
 </body>
