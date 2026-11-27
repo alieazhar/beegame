@@ -157,6 +157,7 @@ function Landmark_Home(){
 
 class Collidable {
     constructor(length, width, posX, posY){
+        this.name = "Generic Collidable";
         this.length = length;
         this.width = width;
         this.posX = posX;
@@ -169,16 +170,18 @@ class Collidable {
     }
 
     static enforceCollision(obj1, obj2){
-        if (!this.hasCollison){
+        if (obj1.hasCollison && obj2.hasCollison){
+            // console.log("here!");
             let results = [0,0];
             // if the x coord of object 1 is less than the x of obj 2 
 
-            if (obj1.posX + obj1.length > obj2.posX || obj2.posX + obj2.length > obj2.posX){
+            if (obj1.posX + obj1.length > obj2.posX && obj2.posX + obj2.length > obj1.posX){
                 results[0] = 1;
+                console.log(`${obj1.name} collided with ${obj2.name}`);
             }
 
 
-            if (obj1.posY + obj1.width > obj2.posY || obj2.posY + obj2.width > obj2.posY){
+            if (obj1.posY + obj1.width > obj2.posY && obj2.posY + obj2.width > obj1.posY){
                 results[1] = 1;
             }
 
@@ -205,6 +208,7 @@ class ObstacleRect extends Collidable {
         this.dY = 0;
         this.dirX = 1;
         this.dirY = 1;
+        this.hasCollison = true;
         
     }
 
@@ -269,14 +273,16 @@ class Player extends Collidable{
         this.speedMultiplier = 5 * gameSpeed;
         this.friction = 0.95;
 
-        this.playerSize = 40;
+        this.length = 40;
+        this.width = 40;
+        this.hasCollison = true;
     }
 
 
     draw = function(){
         ctx.save();
         ctx.beginPath();
-        ctx.rect(this.posX,this.posY,this.playerSize,this.playerSize);
+        ctx.rect(this.posX,this.posY,this.length,this.width);
         ctx.fillStyle = "lightblue";
         ctx.lineWidth = "3";
         ctx.stroke();
@@ -400,10 +406,10 @@ function Key(keyName){
 
 
 function debugCanvasSetup(){
-    debugCanvas = document.getElementById("surface");
-    debugCTX = document.getElementById("surface").getContext("2d"); 
+    debugCanvas = document.getElementById("debug");
+    debugCTX = document.getElementById("debug").getContext("2d"); 
     
-    debugCTX.font = "12px Arial"
+    debugCTX.font = "14px Arial"
 }
 
 function debug(keyEvent){
@@ -427,7 +433,27 @@ function debug(keyEvent){
     // output += "===" + frame + "===";
     
     // console.log(output);
+    debugCTX.save();
+    debugCTX.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
 
-    debugCTX.fillText("hi",20,20);
+    debugCTX.translate(20, 70);
+    debugCTX.rotate((Math.PI / 2) * 3);
+
+    debugCTX.fillStyle = "red";
+    debugCTX.fillText("DEBUG", 0, 0);
+
+    debugCTX.restore();
+
+    if (keyEvent != undefined){
+        debugCTX.fillText(("pressed: " + keyEvent.key),40,20);
+    } else {
+        debugCTX.fillText(("no input"),40,20);
+    }
+
+    debugCTX.fillText(("x: " + player.posX.toFixed(1)),130,20);
+    debugCTX.fillText(("Y: " + player.posY.toFixed(1)),130,40);
+    debugCTX.fillText(("dX: " + player.dX.toFixed(1)),130,60);
+    debugCTX.fillText(("dY: " + player.dY.toFixed(1)),130,80);
+    
 
 }
