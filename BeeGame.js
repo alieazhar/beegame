@@ -286,7 +286,7 @@ class Player extends Collidable{
         this.posX += this.dX;
         this.posY += this.dY;
 
-        skeepInPlayableArea();
+        this.keepInPlayableArea();
 
         this.dX *= this.friction;
         this.dY *= this.friction;
