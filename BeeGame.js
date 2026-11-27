@@ -23,6 +23,7 @@ let player;
 let rightBar;
 let home;
 let scene;
+let obst1;
 
 let keyW = new Key("w");
 let keyS = new Key("s");
@@ -53,10 +54,10 @@ function setup(keyEvent){
     // the bar will be 1/8 of the playable area
     barStart = canvas.width - (canvas.width/8);
 
-    player = new Player(100,100);
+    player = new Player(200,200);
     rightBar = new UI_RightBar()
     home = new Landmark_Home();
-    let obst1 = new ObstacleRect(50,100,300,300,"blue","red",4);
+    obst1 = new ObstacleRect(50,100,300,300,"blue","red",4);
     scene = [rightBar, home,obst1];
 
     scene.push(player);
@@ -79,11 +80,11 @@ function gameLoop(){
     
     player.move();
     drawAll();
-    enforceAllCollisons();
-    
 
     // debug
     debug(DEBUG_lastKeyEvent);
+
+    enforceAllCollisons();
 }
 
 
@@ -156,10 +157,10 @@ function Landmark_Home(){
 
 
 class Collidable {
-    constructor(length, width, posX, posY){
+    constructor(length, height, posX, posY){
         this.name = "Generic Collidable";
         this.length = length;
-        this.width = width;
+        this.height = height;
         this.posX = posX;
         this.posY = posY;
         this.dX = 0;
@@ -172,42 +173,65 @@ class Collidable {
     static enforceCollision(obj1, obj2){
         if (obj1.hasCollison && obj2.hasCollison){
             // console.log("here!");
+
+            debugCTX.save();
+            debugCTX.translate(190,20);
+
+            if (obj1.posX < 0){
+                obj1.posX = 0;
+            }
+
+            if (obj1.posY < 0){
+                obj1.posY = 0;
+            }
+
+            if (obj1.posX + obj1.length > barStart){
+                obj1.posX = barStart - obj1.length;
+            }
+
+            if (obj1.posY + obj1.height > canvas.height){
+                obj1.posY = canvas.height - obj1.height;
+            }
+
+
             let results = [0,0];
             // if the x coord of object 1 is less than the x of obj 2 
 
-            if (obj1.posX + obj1.length > obj2.posX && obj2.posX + obj2.length > obj1.posX){
+            if (obj1.posX + obj1.length > obj2.posX && (Math.abs(obj1.posX + obj2.posX) < 0.1)){
                 results[0] = 1;
-                console.log(`${obj1.name} collided with ${obj2.name}`);
+                debugCTX.fillText((`${obj1.name} & ${obj2.name}`),0,0);
             }
 
 
-            if (obj1.posY + obj1.width > obj2.posY && obj2.posY + obj2.width > obj1.posY){
+            if (obj1.posY - obj1.height > obj2.posY && obj2.posY - obj2.height > obj1.posY){
                 results[1] = 1;
+                debugCTX.fillText((`${obj1.name} & ${obj2.name}`),0,20);
             }
 
             if (results[0] == 1){
+                debugCTX.fillText((`${obj1.name} posX: ${obj1.posX} -> ${obj2.posX - obj1.length}`),0,20);
                 obj1.posX = obj2.posX - obj1.length;
                 obj1.dX = 0;
             }
 
             if (results[1] == 1){
-                obj1.posY = obj2.posY - obj1.width;
+                debugCTX.fillText((`${obj1.name} posY: ${obj1.posY} -> ${obj2.posY - obj1.height}`),0,40);
+                obj1.posY = obj2.posY - obj1.height;
                 obj1.dY = 0;
             }
+
+            debugCTX.restore();
         }
     }
 }
 
 class ObstacleRect extends Collidable {
-    constructor(length, width, posX, posY, innerColour, outlineColour, strokeSize){
-        super(length, width, posX, posY);
+    constructor(length, height, posX, posY, innerColour, outlineColour, strokeSize){
+        super(length, height, posX, posY);
+        this.name = "Generic ObstacleRect";
         this.innerColour = innerColour;
         this.outline = outlineColour;
         this.strokeSize = strokeSize;
-        this.dX = 0;
-        this.dY = 0;
-        this.dirX = 1;
-        this.dirY = 1;
         this.hasCollison = true;
         
     }
@@ -215,7 +239,7 @@ class ObstacleRect extends Collidable {
     draw(){
         ctx.save();
         ctx.beginPath();
-        ctx.rect(this.posX,this.posY,this.length,this.width);
+        ctx.rect(this.posX,this.posY,this.length,this.height);
         ctx.fillStyle = this.innerColour;
         ctx.lineWidth = this.strokeSize;
         ctx.stroke();
@@ -261,20 +285,16 @@ function enforceAllCollisons(){
 
 class Player extends Collidable{
     constructor(posX, posY){
-        super(posX, posY);
-        this.posX = 0;
-        this.posY = 0;
-        this.dX = 0;
-        this.dY = 0;
-        this.dirX = 1;
-        this.dirY = 1;
+        let length = 40;
+        let height = 40;
+        super(length,height,posX, posY);
+        this.name = "Player";
 
         this.maxSpeed = 6 * gameSpeed;
         this.speedMultiplier = 5 * gameSpeed;
         this.friction = 0.95;
 
-        this.length = 40;
-        this.width = 40;
+
         this.hasCollison = true;
     }
 
@@ -282,7 +302,7 @@ class Player extends Collidable{
     draw = function(){
         ctx.save();
         ctx.beginPath();
-        ctx.rect(this.posX,this.posY,this.length,this.width);
+        ctx.rect(this.posX,this.posY,this.length,this.height);
         ctx.fillStyle = "lightblue";
         ctx.lineWidth = "3";
         ctx.stroke();
@@ -336,21 +356,7 @@ class Player extends Collidable{
     }
 
     keepInPlayableArea = function(){
-        if (this.posX < 0){
-            this.posX = 0;
-        }
 
-        if (this.posY < 0){
-            this.posY = 0;
-        }
-
-        if (this.posX + this.playerSize > barStart){
-            this.posX = barStart - this.playerSize;
-        }
-
-        if (this.posY + this.playerSize > canvas.height){
-            this.posY = canvas.height - this.playerSize;
-        }
     }
 
 }
@@ -449,6 +455,13 @@ function debug(keyEvent){
     } else {
         debugCTX.fillText(("no input"),40,20);
     }
+
+    debugCTX.fillText(("x: " + player.posX.toFixed(1)),130,20);
+    debugCTX.fillText(("Y: " + player.posY.toFixed(1)),130,40);
+    debugCTX.fillText(("dX: " + player.dX.toFixed(1)),130,60);
+    debugCTX.fillText(("dY: " + player.dY.toFixed(1)),130,80);
+
+    debugCTX.translate(0,100);
 
     debugCTX.fillText(("x: " + player.posX.toFixed(1)),130,20);
     debugCTX.fillText(("Y: " + player.posY.toFixed(1)),130,40);
