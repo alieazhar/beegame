@@ -175,7 +175,7 @@ class Collidable {
             // console.log("here!");
 
             debugCTX.save();
-            debugCTX.translate(190,20);
+            debugCTX.translate(320,20);
 
             if (obj1.posX < 0){
                 obj1.posX = 0;
@@ -196,31 +196,62 @@ class Collidable {
 
             let results = [0,0];
             // if the x coord of object 1 is less than the x of obj 2 
+            let obj1_strokeSize = 0;
+            let obj2_strokeSize = 0;
 
-            if (obj1.posX + obj1.length > obj2.posX && (Math.abs(obj1.posX + obj2.posX) < 0.1)){
+            if (obj1.strokeSize != undefined){
+                obj1_strokeSize = obj1.strokeSize;
+            }
+
+            if (obj2.strokeSize != undefined){
+                obj2_strokeSize = obj2.strokeSize;
+            }
+
+
+            if (obj1.posX + obj1.length + obj1_strokeSize > obj2.posX + obj2_strokeSize 
+                && obj2.posX + obj2.length + obj2_strokeSize > obj1.posX + obj1_strokeSize){
                 results[0] = 1;
-                debugCTX.fillText((`${obj1.name} & ${obj2.name}`),0,0);
+                // debugCTX.fillText(`${obj1.name} & ${obj2.name}`,0,0);s
             }
 
-
-            if (obj1.posY - obj1.height > obj2.posY && obj2.posY - obj2.height > obj1.posY){
+            if (obj1.posY + obj1.height + obj1_strokeSize > obj2.posY + obj2_strokeSize 
+                && obj2.posY + obj2.height + obj2_strokeSize > obj1.posY + obj1_strokeSize){
                 results[1] = 1;
-                debugCTX.fillText((`${obj1.name} & ${obj2.name}`),0,20);
+                // debugCTX.fillText(`${obj1.name} & ${obj2.name}`,0,20);
             }
 
-            if (results[0] == 1){
-                debugCTX.fillText((`${obj1.name} posX: ${obj1.posX} -> ${obj2.posX - obj1.length}`),0,20);
-                obj1.posX = obj2.posX - obj1.length;
-                obj1.dX = 0;
-            }
+            // if (results[0] == 1){
+            //     debugCTX.fillText((`${obj1.name} posX: ${obj1.posX} -> ${obj2.posX - obj1.length}`),200,0);
+            //     // obj1.posX = obj2.posX - obj1.length;
+            //     // obj1.dX = 0;
+            // }
 
-            if (results[1] == 1){
-                debugCTX.fillText((`${obj1.name} posY: ${obj1.posY} -> ${obj2.posY - obj1.height}`),0,40);
-                obj1.posY = obj2.posY - obj1.height;
-                obj1.dY = 0;
+            // if (results[1] == 1){
+            //     debugCTX.fillText((`${obj1.name} posY: ${obj1.posY} -> ${obj2.posY - obj1.height}`),200,20);
+            //     // obj1.posY = obj2.posY - obj1.height;
+            //     // obj1.dY = 0;
+            // }
+
+            // if (results[0] == 1){
+            //     debugCTX.fillText("X COLLISION DETECTED!", 0, 40);
+            //     obj1.dirX = 0;
+            // }
+            // if (results[1] == 1){
+            //     debugCTX.fillText("Y COLLISION DETECTED!", 0, 60);
+            //     obj1.dirY = 0;
+            // }
+
+            if (results[0] == 1 && results[1] == 1){
+                debugCTX.fillText("XY COLLISION DETECTED!", 0, 40);
+                ctx.save();
+                ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
+                ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+                ctx.fill();
+                ctx.restore();
             }
 
             debugCTX.restore();
+
         }
     }
 }
@@ -291,8 +322,10 @@ class Player extends Collidable{
         this.name = "Player";
 
         this.maxSpeed = 6 * gameSpeed;
-        this.speedMultiplier = 5 * gameSpeed;
-        this.friction = 0.95;
+        this.speedMultiplier = 7 * gameSpeed;
+        this.friction = 0.94;
+
+        this.innerColour = "lightblue";
 
 
         this.hasCollison = true;
@@ -303,7 +336,7 @@ class Player extends Collidable{
         ctx.save();
         ctx.beginPath();
         ctx.rect(this.posX,this.posY,this.length,this.height);
-        ctx.fillStyle = "lightblue";
+        ctx.fillStyle = this.innerColour;
         ctx.lineWidth = "3";
         ctx.stroke();
         ctx.fill();
@@ -367,10 +400,10 @@ function userInputController(){
         //debug
         DEBUG_lastKeyEvent = keyEvent;
 
-        let currentKey = new Key(keyEvent.name);
+        let currentKey = new Key((keyEvent.name));
         
         for (let i = 0; i < keys.length; i++){
-            if (keyEvent.key == keys[i].name){
+            if (keyEvent.key.toLowerCase() == keys[i].name){
                 currentKey = keys[i];
             }
         }
@@ -461,12 +494,10 @@ function debug(keyEvent){
     debugCTX.fillText(("dX: " + player.dX.toFixed(1)),130,60);
     debugCTX.fillText(("dY: " + player.dY.toFixed(1)),130,80);
 
-    debugCTX.translate(0,100);
-
-    debugCTX.fillText(("x: " + player.posX.toFixed(1)),130,20);
-    debugCTX.fillText(("Y: " + player.posY.toFixed(1)),130,40);
-    debugCTX.fillText(("dX: " + player.dX.toFixed(1)),130,60);
-    debugCTX.fillText(("dY: " + player.dY.toFixed(1)),130,80);
+    debugCTX.fillText(("x: " + obst1.posX.toFixed(1)),220,20);
+    debugCTX.fillText(("Y: " + obst1.posY.toFixed(1)),220,40);
+    debugCTX.fillText(("dX: " + obst1.dX.toFixed(1)),220,60);
+    debugCTX.fillText(("dY: " + obst1.dY.toFixed(1)),220,80);
     
 
 }
