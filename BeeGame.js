@@ -32,9 +32,7 @@ let keyD = new Key("KeyD");
 let keySpace = new Key("Space");
 let keyShiftLeft = new Key("ShiftLeft");
 
-let keys = [keyW,keyS,keyA,keyD,keyShiftLeft];
-
-
+let keys = [keyW,keyS,keyA,keyD,keySpace,keyShiftLeft];
 
 // debug
 let DEBUG_lastKeyEvent;
@@ -59,10 +57,10 @@ function setup(keyEvent){
     player = new Player(200,200);
     rightBar = new UI_RightBar()
     home = new Landmark_Home();
-    obst1 = new ObstacleRect(50,100,300,300,"blue","red",4);
-    scene = [rightBar, home,obst1];
+    obst1 = new ObstacleRect(50,70,300,300,"blue","red",4);
+    scene = [rightBar, home,player,obst1];
 
-    scene.push(player);
+    // scene.push(player);
 
     startTimer();
 }
@@ -172,6 +170,8 @@ class Collidable {
         this.dirX = 1;
         this.dirY = 1;
         this.hasCollison = false;
+        this.isColliding = [false,false];
+        // colliding horizontally or vertically
                            
     }
 
@@ -197,19 +197,16 @@ class Collidable {
             if (obj1.posY + obj1.height > canvas.height){
                 obj1.posY = canvas.height - obj1.height;
             }
-
-
-            let results = [0,0];
             
             let obj1_strokeSize = 0;
             let obj2_strokeSize = 0;
 
             if (obj1.strokeSize != undefined){
-                obj1_strokeSize = obj1.strokeSize;
+                obj1_strokeSize = obj1.strokeSize / 2;
             }
 
             if (obj2.strokeSize != undefined){
-                obj2_strokeSize = obj2.strokeSize;
+                obj2_strokeSize = obj2.strokeSize / 2;
             }
 
             // A - - - - - B 
@@ -221,15 +218,35 @@ class Collidable {
             // |           |    |           |
             // C - - - - - D    G - - - - - H
 
-            let pointA = [obj1.posX, obj1.posY];
-            let pointB = [pointA[0] + obj1.length, obj1.posY];
-            let pointC = [pointA[0], obj1.posY + obj1.height];
+            let pointA = [obj1.posX-obj1_strokeSize, obj1.posY-obj1_strokeSize];
+            let pointB = [pointA[0] + obj1.length + 2*obj1_strokeSize, obj1.posY-obj1_strokeSize];
+            let pointC = [pointA[0], obj1.posY + obj1.height + obj1_strokeSize];
             let pointD = [pointB[0], pointC[1]];
 
-            let pointE = [obj2.posX, obj2.posY];
-            let pointF = [pointE[0] + obj2.length, obj2.posY];
-            let pointG = [pointE[0], obj2.posY + obj2.height];
+            let pointE = [obj2.posX-obj2_strokeSize, obj2.posY-obj2_strokeSize];
+            let pointF = [pointE[0] + obj2.length + 2 * obj2_strokeSize, obj2.posY-obj2_strokeSize];
+            let pointG = [pointE[0], obj2.posY + obj2.height + obj2_strokeSize];
             let pointH = [pointF[0], pointG[1]];
+
+            let pointArr = [pointA,pointB,pointC,pointD,pointE,pointF,pointG,pointH];
+            for (let i = 0; i < pointArr.length; i++){
+                let alphabet = "ABCDEFGH";
+                let num = alphabet.charAt(i);
+                ctx.fillText(num,pointArr[i][0],pointArr[i][1]);
+            }
+
+            for (let i = 0; i < pointArr.length/2; i++){
+                let alphabet = "ABCDEFGH";
+                let num = alphabet.charAt(i);
+                let str = num + " - X: " + pointArr[i][0].toFixed(1) + " Y: " + pointArr[i][1].toFixed(1);
+                debugCTX.fillText(str,0,0+i*20);
+            }
+            for (let i = pointArr.length/2, j = 0; i < pointArr.length; i++, j++){
+                let alphabet = "ABCDEFGH";
+                let num = alphabet.charAt(i);
+                let str = num + " - X: " + pointArr[i][0].toFixed(1) + " Y: " + pointArr[i][1].toFixed(1);
+                debugCTX.fillText(str,160,j*20);
+            }
 
 
 
@@ -240,38 +257,59 @@ class Collidable {
             //          and then if the position of object 1 plus its length and its stroke size
             //          if that's less than object 2's right side
 
-            // OBJ1 ON RIGHT
-            if (pointB[0] > pointE[0] && pointB[0] < pointF[0] && pointA[0] < pointE[0]){
-                results[0] = 1;
-                debugCTX.fillText("RIGHT COLLISION!", 0, 40);
+            
+            if ((pointB[0] > pointE[0] && pointB[0] < pointF[0] && pointA[0] < pointE[0])
+            && !(pointD[1] < pointF[1]) && !(pointB[1] > pointG[1])){
+                obj1.isColliding[0] = true;
+                // OBJ1 WITH RIGHT COLLISION
                 ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
                 ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
                 ctx.fill();
                 ctx.restore();
-            }
 
-            // OBJ1 ON LEFT
-            if (pointA[0]< pointF[0] && pointA[0] > pointE[0] && pointB[0] < pointF[0]){
-                results[0] = 1;
-                debugCTX.fillText("LEFT COLLISION!", 0, 40);
+                obj1.posX = pointE[0] - obj1.length - obj1_strokeSize;
+                obj1.dX = 0;
+            } else if ((pointA[0]< pointF[0] && pointA[0] > pointE[0] && pointB[0] > pointF[0])
+            && !(pointD[1] < pointF[1]) && !(pointB[1] > pointG[1])){
+                obj1.isColliding[0] = true;
+                // OBJ1 WITH LEFT COLLISION
                 ctx.save();
                 ctx.beginPath();
                 ctx.fillStyle = "rgba(0, 255, 0, 0.44)";
                 ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
                 ctx.fill();
                 ctx.restore();
-            }
 
-            // OBJ1 ON BOTTOM
-            if (pointA[1] < pointG[1] && pointE[1] > pointC[1]){
-                results[1] = 1;
+                obj1.posX = pointF[0] + obj1_strokeSize;
+                obj1.dX = 0;
             }
-
-            // OBJ1 ON TOP
-            if (pointE[1] < pointC[1] && pointA[1] < pointG[1]){
-                results[1] = 1;
+            
+            if ((pointA[1] < pointG[1] && pointA[1] > pointE[1] && pointG[1] < pointC[1])
+            && (pointB[0] > pointG[0] && pointA[0] < pointF[0])){
+                // OBJ1 ON BOTTOM
+                obj1.isColliding[1] = true;
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(255, 0, 212, 0.44)";
+                ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+                ctx.fill();
+                ctx.restore();
+                obj1.posY = pointG[1] + obj1_strokeSize;
+                obj1.dY = 0;
+            } else if ((pointC[1] > pointF[1] && pointC[1] < pointG[1])
+            && (pointB[0] > pointG[0] && pointA[0] < pointF[0])){
+                // OBJ1 ON TOP
+                obj1.isColliding[1] = true;
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(255, 191, 0, 0.44)";
+                ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+                ctx.fill();
+                ctx.restore();
+                obj1.posY = pointF[1] - obj1.height - obj1_strokeSize;
+                obj1.dY = 0;
             }
 
 
@@ -335,7 +373,7 @@ function enforceAllCollisons(){
     for (let i = 0; i < scene.length; i++){
         let curr = scene[i];
 
-        for (let j = 0; j < scene.length; j++){
+        for (let j = i + 1; j < scene.length; j++){
             if (i !== j){
                 Collidable.enforceCollision(curr,scene[j]);
             }
@@ -367,8 +405,8 @@ function enforceAllCollisons(){
 
 class Player extends Collidable{
     constructor(posX, posY){
-        let length = 40;
-        let height = 40;
+        let length = 100;
+        let height = 100;
         super(length,height,posX, posY);
         this.name = "Player";
 
@@ -380,6 +418,7 @@ class Player extends Collidable{
         this.isSprinting = false;
 
         this.innerColour = "lightblue";
+        this.strokeSize = 3;
 
         this.hasCollison = true;
     }
@@ -390,7 +429,7 @@ class Player extends Collidable{
         ctx.beginPath();
         ctx.rect(this.posX,this.posY,this.length,this.height);
         ctx.fillStyle = this.innerColour;
-        ctx.lineWidth = "3";
+        ctx.lineWidth = this.strokeSize;
         ctx.stroke();
         ctx.fill();
         ctx.restore();
@@ -422,7 +461,7 @@ class Player extends Collidable{
                         this.isShifting = true;
                         break;
                     case ("Space"):
-                        this.isSprintisdg = true;
+                        this.isSprinting = true;
                         break;
                 }
             
