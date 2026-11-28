@@ -168,6 +168,7 @@ class Collidable {
         this.dirX = 1;
         this.dirY = 1;
         this.hasCollison = false;
+        this.collisionArr = [true,true,true,true];
     }
 
     static enforceCollision(obj1, obj2){
@@ -176,6 +177,7 @@ class Collidable {
 
             debugCTX.save();
             debugCTX.translate(320,20);
+
 
             if (obj1.posX < 0){
                 obj1.posX = 0;
@@ -207,48 +209,94 @@ class Collidable {
                 obj2_strokeSize = obj2.strokeSize;
             }
 
+            // A - - - - - B 
+            // |           |   
+            // |           |
+            // |           |    E - - - - - F
+            // |     1     |    |           |
+            // |           |    |     2     |
+            // |           |    |           |
+            // C - - - - - D    G - - - - - H
 
-            if (obj1.posX + obj1.length + obj1_strokeSize > obj2.posX + obj2_strokeSize 
-                && obj2.posX + obj2.length + obj2_strokeSize > obj1.posX + obj1_strokeSize){
+            let pointA = [obj1.posX, obj1.posY];
+            let pointB = [pointA[0] + obj1.length, obj1.posY];
+            let pointC = [pointA[0], obj1.posY + obj1.height];
+            let pointD = [pointB[0], pointC[1]];
+
+            let pointE = [obj2.posX, obj2.posY];
+            let pointF = [pointE[0] + obj2.length, obj2.posY];
+            let pointG = [pointE[0], obj2.posY + obj2.height];
+            let pointH = [pointF[0], pointG[1]];
+
+
+
+            // if obj1 is to the left
+            // if the position of (object 1 plus it's length and stroke size)
+            //          is greater than the position of object2 plus its stroke size
+            //          then it's past the left side of object 2
+            //          and then if the position of object 1 plus its length and its stroke size
+            //          if that's less than object 2's right side
+
+            // OBJ1 ON LEFT
+            if (pointB[0] > pointE[0] && pointA[0] < pointE[0]){
                 results[0] = 1;
-                // debugCTX.fillText(`${obj1.name} & ${obj2.name}`,0,0);s
-            }
-
-            if (obj1.posY + obj1.height + obj1_strokeSize > obj2.posY + obj2_strokeSize 
-                && obj2.posY + obj2.height + obj2_strokeSize > obj1.posY + obj1_strokeSize){
-                results[1] = 1;
-                // debugCTX.fillText(`${obj1.name} & ${obj2.name}`,0,20);
-            }
-
-            // if (results[0] == 1){
-            //     debugCTX.fillText((`${obj1.name} posX: ${obj1.posX} -> ${obj2.posX - obj1.length}`),200,0);
-            //     // obj1.posX = obj2.posX - obj1.length;
-            //     // obj1.dX = 0;
-            // }
-
-            // if (results[1] == 1){
-            //     debugCTX.fillText((`${obj1.name} posY: ${obj1.posY} -> ${obj2.posY - obj1.height}`),200,20);
-            //     // obj1.posY = obj2.posY - obj1.height;
-            //     // obj1.dY = 0;
-            // }
-
-            // if (results[0] == 1){
-            //     debugCTX.fillText("X COLLISION DETECTED!", 0, 40);
-            //     obj1.dirX = 0;
-            // }
-            // if (results[1] == 1){
-            //     debugCTX.fillText("Y COLLISION DETECTED!", 0, 60);
-            //     obj1.dirY = 0;
-            // }
-
-            if (results[0] == 1 && results[1] == 1){
-                debugCTX.fillText("XY COLLISION DETECTED!", 0, 40);
+                debugCTX.fillText("LEFT  OLLISION!", 0, 40);
                 ctx.save();
                 ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
                 ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
                 ctx.fill();
                 ctx.restore();
+                obj1.posX = pointB[0] - obj1.length;
+                console.log(obj1.posX);
             }
+
+            // OBJ1 ON RIGHT
+            if (pointA[0] < pointF[0] && pointB[0] > pointE[0]){
+                results[0] = 1;
+                // debugCTX.fillText("RIGHT COLLISION!", 0, 40);
+                // ctx.save();
+                // ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
+                // ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+                // ctx.fill();
+                // ctx.restore();
+            }
+
+            // OBJ1 ON BOTTOM
+            if (pointA[1] < pointG[1] && pointE[1] > pointC[1]){
+                results[1] = 1;
+            }
+
+            // OBJ1 ON TOP
+            if (pointE[1] < pointC[1] && pointA[1] < pointG[1]){
+                results[1] = 1;
+            }
+
+
+
+            // if (obj1.posX + obj1.length + obj1_strokeSize > obj2.posX + obj2_strokeSize 
+            //     && obj2.posX + obj2.length + obj2_strokeSize > obj1.posX + obj1_strokeSize){
+            //     results[0] = 1;
+            // }
+
+            // if (obj1.posY + obj1.height + obj1_strokeSize > obj2.posY + obj2_strokeSize 
+            //     && obj2.posY + obxj2.height + obj2_strokeSize > obj1.posY + obj1_strokeSize){
+            //     results[1] = 1;
+            // }
+
+
+            // if (results[0] == 1 && results[1] == 1){
+            //     debugCTX.fillText("XY COLLISION DETECTED!", 0, 40);
+            //     ctx.save();
+            //     ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
+            //     ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+            //     ctx.fill();
+            //     ctx.restore();
+
+            //     obj1.dX = 0;
+            //     obj1.dY = 0;
+
+
+            // }
 
             debugCTX.restore();
 
