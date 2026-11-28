@@ -25,12 +25,14 @@ let home;
 let scene;
 let obst1;
 
-let keyW = new Key("w");
-let keyS = new Key("s");
-let keyA = new Key("a");
-let keyD = new Key("d");
+let keyW = new Key("KeyW");
+let keyS = new Key("KeyS");
+let keyA = new Key("KeyA");
+let keyD = new Key("KeyD");
+let keySpace = new Key("Space");
+let keyShiftLeft = new Key("ShiftLeft");
 
-let keys = [keyW,keyS,keyA,keyD];
+let keys = [keyW,keyS,keyA,keyD,keyShiftLeft];
 
 
 
@@ -85,6 +87,8 @@ function gameLoop(){
     debug(DEBUG_lastKeyEvent);
 
     enforceAllCollisons();
+
+    
 }
 
 
@@ -168,12 +172,11 @@ class Collidable {
         this.dirX = 1;
         this.dirY = 1;
         this.hasCollison = false;
-        this.collisionArr = [true,true,true,true];
+                           
     }
 
     static enforceCollision(obj1, obj2){
         if (obj1.hasCollison && obj2.hasCollison){
-            // console.log("here!");
 
             debugCTX.save();
             debugCTX.translate(320,20);
@@ -197,7 +200,7 @@ class Collidable {
 
 
             let results = [0,0];
-            // if the x coord of object 1 is less than the x of obj 2 
+            
             let obj1_strokeSize = 0;
             let obj2_strokeSize = 0;
 
@@ -233,32 +236,32 @@ class Collidable {
             // if obj1 is to the left
             // if the position of (object 1 plus it's length and stroke size)
             //          is greater than the position of object2 plus its stroke size
-            //          then it's past the left side of object 2
+            //          then it's past the left side of object 2s
             //          and then if the position of object 1 plus its length and its stroke size
             //          if that's less than object 2's right side
 
-            // OBJ1 ON LEFT
-            if (pointB[0] > pointE[0] && pointA[0] < pointE[0]){
+            // OBJ1 ON RIGHT
+            if (pointB[0] > pointE[0] && pointB[0] < pointF[0] && pointA[0] < pointE[0]){
                 results[0] = 1;
-                debugCTX.fillText("LEFT  OLLISION!", 0, 40);
+                debugCTX.fillText("RIGHT COLLISION!", 0, 40);
                 ctx.save();
+                ctx.beginPath();
                 ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
                 ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
                 ctx.fill();
                 ctx.restore();
-                obj1.posX = pointB[0] - obj1.length;
-                console.log(obj1.posX);
             }
 
-            // OBJ1 ON RIGHT
-            if (pointA[0] < pointF[0] && pointB[0] > pointE[0]){
+            // OBJ1 ON LEFT
+            if (pointA[0]< pointF[0] && pointA[0] > pointE[0] && pointB[0] < pointF[0]){
                 results[0] = 1;
-                // debugCTX.fillText("RIGHT COLLISION!", 0, 40);
-                // ctx.save();
-                // ctx.fillStyle = "rgba(255, 0, 0, 0.44)";
-                // ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
-                // ctx.fill();
-                // ctx.restore();
+                debugCTX.fillText("LEFT COLLISION!", 0, 40);
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = "rgba(0, 255, 0, 0.44)";
+                ctx.rect(obj1.posX, obj1.posY, obj1.length, obj1.height);
+                ctx.fill();
+                ctx.restore();
             }
 
             // OBJ1 ON BOTTOM
@@ -373,8 +376,10 @@ class Player extends Collidable{
         this.speedMultiplier = 7 * gameSpeed;
         this.friction = 0.94;
 
-        this.innerColour = "lightblue";
+        this.isShifting = false;
+        this.isSprinting = false;
 
+        this.innerColour = "lightblue";
 
         this.hasCollison = true;
     }
@@ -394,29 +399,46 @@ class Player extends Collidable{
     move = function(){
         for (let i = 0; i < keys.length; i++){
             let currentKey = keys[i];
-            // console.log("here!");
 
             if (currentKey.state == "keydown"){
-                switch (currentKey.name){
-                    case ("w"):
+                switch (currentKey.code){
+                    case ("KeyW"):
                         this.dirY = -1;
                         this.dY += (this.speedMultiplier * this.dirY);
                         break;
-                    case ("a"):
+                    case ("KeyA"):
                         this.dirX = -1;
-                        this.dX += (this.speedMultiplier * this.dirX)
+                        this.dX += (this.speedMultiplier * this.dirX);
                         break;
-                    case ("s"):
+                    case ("KeyS"):
                         this.dirY = 1;
-                        this.dY += (this.speedMultiplier * this.dirY)
+                        this.dY += (this.speedMultiplier * this.dirY);
                         break;
-                    case ("d"):
+                    case ("KeyD"):
                         this.dirX = 1;
-                        this.dX += (this.speedMultiplier * this.dirX)
+                        this.dX += (this.speedMultiplier * this.dirX);
+                        break;
+                    case ("ShiftLeft"):
+                        this.isShifting = true;
+                        break;
+                    case ("Space"):
+                        this.isSprintisdg = true;
                         break;
                 }
             
             }
+
+            if (currentKey.state == "keyup"){
+                switch (currentKey.code){
+                    case("ShiftLeft"):
+                        this.isShifting = false;
+                        break;
+                    case ("Space"):
+                        this.isSprinting = false;
+                        break;
+                }
+            }
+
         }
         if (Math.abs(this.dX) > (this.maxSpeed)){
             this.dX = this.maxSpeed * this.dirX;
@@ -426,17 +448,11 @@ class Player extends Collidable{
             this.dY = this.maxSpeed * this.dirY;
         }
 
-        this.posX += this.dX;
-        this.posY += this.dY;
-
-        this.keepInPlayableArea();
+        this.posX += this.dX * (this.isShifting ? .5 : 1) * (this.isSprinting ? 2 : 1);
+        this.posY += this.dY * (this.isShifting ? .5 : 1) * (this.isSprinting ? 2 : 1);
 
         this.dX *= this.friction;
         this.dY *= this.friction;
-
-    }
-
-    keepInPlayableArea = function(){
 
     }
 
@@ -448,10 +464,10 @@ function userInputController(){
         //debug
         DEBUG_lastKeyEvent = keyEvent;
 
-        let currentKey = new Key((keyEvent.name));
+        let currentKey = new Key((keyEvent.code));
         
         for (let i = 0; i < keys.length; i++){
-            if (keyEvent.key.toLowerCase() == keys[i].name){
+            if (keyEvent.code== keys[i].code){
                 currentKey = keys[i];
             }
         }
@@ -461,8 +477,8 @@ function userInputController(){
 
 }
 
-function Key(keyName){
-    this.name = keyName;
+function Key(keyCode){
+    this.code = keyCode;
     this.state = "none";
 }
 
@@ -532,20 +548,20 @@ function debug(keyEvent){
     debugCTX.restore();
 
     if (keyEvent != undefined){
-        debugCTX.fillText(("pressed: " + keyEvent.key),40,20);
+        debugCTX.fillText(("pressed: " + keyEvent.code),40,20);
     } else {
         debugCTX.fillText(("no input"),40,20);
     }
 
-    debugCTX.fillText(("x: " + player.posX.toFixed(1)),130,20);
-    debugCTX.fillText(("Y: " + player.posY.toFixed(1)),130,40);
-    debugCTX.fillText(("dX: " + player.dX.toFixed(1)),130,60);
-    debugCTX.fillText(("dY: " + player.dY.toFixed(1)),130,80);
+    debugCTX.fillText(("x: " + player.posX.toFixed(1)),150,20);
+    debugCTX.fillText(("Y: " + player.posY.toFixed(1)),150,40);
+    debugCTX.fillText(("dX: " + player.dX.toFixed(1)),150,60);
+    debugCTX.fillText(("dY: " + player.dY.toFixed(1)),150,80);
 
-    debugCTX.fillText(("x: " + obst1.posX.toFixed(1)),220,20);
-    debugCTX.fillText(("Y: " + obst1.posY.toFixed(1)),220,40);
-    debugCTX.fillText(("dX: " + obst1.dX.toFixed(1)),220,60);
-    debugCTX.fillText(("dY: " + obst1.dY.toFixed(1)),220,80);
+    debugCTX.fillText(("x: " + obst1.posX.toFixed(1)),240,20);
+    debugCTX.fillText(("Y: " + obst1.posY.toFixed(1)),240,40);
+    debugCTX.fillText(("dX: " + obst1.dX.toFixed(1)),240,60);
+    debugCTX.fillText(("dY: " + obst1.dY.toFixed(1)),240,80);
     
 
 }
